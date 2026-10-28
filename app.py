@@ -336,16 +336,18 @@ with gr.Blocks(title="PDF Q&A System") as demo:
     )
 
 # Launch the app
+
 # if __name__ == "__main__":
 #     demo.queue(max_size=1).launch(
-#         share=True,
-#         server_name="0.0.0.0",
-#         server_port=7865
+#         share=False,
+#         server_name="127.0.0.1",
+#         server_port=7866
 #     )
 
 if __name__ == "__main__":
+    import os
     demo.queue(max_size=1).launch(
         share=False,
-        server_name="127.0.0.1",
-        server_port=7866
+        server_name="0.0.0.0",
+        server_port=int(os.environ.get("PORT", 10000))
     )
