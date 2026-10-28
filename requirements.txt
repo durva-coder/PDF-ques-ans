@@ -1,0 +1,30 @@
+# Core dependencies
+
+
+
+
+
+
+torchvision
+torchaudio
+
+huggingface_hub
+
+# Optional PDF processing alternatives
+pymupdf
+pdfplumber
+
+# For quantization (optional, GPU required)
+bitsandbytes
+accelerate
+
+langchain-community
+langchain-text-splitters
+langchain-huggingface
+langchain-classic
+torch
+transformers
+gradio
+pypdf
+faiss-cpu
+sentence-transformers
