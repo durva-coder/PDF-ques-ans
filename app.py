@@ -205,18 +205,21 @@ def initialize_llm():
         return None
 
 # Initialize the LLM
-llm = initialize_llm()
+llm = None
 
 # Answer question function
 def answer_question(question, retriever_state):
+    global llm
     if not question.strip():
         return "Please enter a question."
     
     if retriever_state is None:
         return "Please upload a PDF first."
-    
+
     if llm is None:
-        return "LLM not available. Please check your installation."
+        llm = initialize_llm()
+        if llm is None:
+            return "LLM not available. Please check your installation."
     
     try:
         qa_chain = RetrievalQA.from_chain_type(
