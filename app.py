@@ -1,6 +1,9 @@
 
 import os
 import gradio as gr
+import time
+import random
+from google.api_core.exceptions import ResourceExhausted
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -49,6 +52,7 @@ def get_embeddings():
     return embeddings
 
 
+
 def process_pdf(pdf_file):
     if pdf_file is None:
         return None, "Please upload a PDF file."
@@ -66,13 +70,53 @@ def process_pdf(pdf_file):
             chunk_size=1000,
             chunk_overlap=200,
         )
+
         chunks = splitter.split_documents(documents)
 
         if not chunks:
             return None, "No text chunks could be created."
 
         embedding_model = get_embeddings()
-        vectorstore = FAISS.from_documents(chunks, embedding_model)
+
+        # Process smaller batches with retry protection
+        batch_size = 20
+        vectorstore = None
+
+        for start in range(0, len(chunks), batch_size):
+            batch = chunks[start:start + batch_size]
+
+            for attempt in range(5):
+                try:
+                    if vectorstore is None:
+                        vectorstore = FAISS.from_documents(
+                            batch, embedding_model
+                        )
+                    else:
+                        vectorstore.add_documents(batch)
+
+                    break
+
+                except Exception as e:
+                    error_message = str(e).lower()
+
+                    if (
+                        "429" not in error_message
+                        and "resource_exhausted" not in error_message
+                    ):
+                        raise
+
+                    if attempt == 4:
+                        raise
+
+                    wait_time = min(30 * (2 ** attempt), 120)
+                    wait_time += random.uniform(1, 5)
+
+                    print(
+                        f"Rate limit reached. "
+                        f"Retrying in {wait_time:.1f} seconds..."
+                    )
+
+                    time.sleep(wait_time)
 
         retriever = vectorstore.as_retriever(
             search_type="similarity",
